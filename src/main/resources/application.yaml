@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: fund-performance-service
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        options:
+          model: qwen3:8b
+      embedding:
+        options:
+          model: nomic-embed-text:v1.5
+    vectorstore:
+      chroma:
+        client:
+          host: http://localhost
+          port: 8000
+        collection-name: fund_reports
+  datasource:
+    url: jdbc:h2:file:./data/fund-registry
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+mcp:
+  server:
+    name: fund-performance-service
+    transport: stdio   # switch to streamable-http via the -webmvc starter for networked access
