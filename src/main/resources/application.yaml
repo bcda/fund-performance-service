@@ -4,26 +4,83 @@ spring:
   ai:
     ollama:
       base-url: http://localhost:11434
+      client:
+        read-timeout: 1800s
       chat:
         options:
-          model: qwen3:8b
+          model: qwen2.5:7b-instruct-q4_K_M
+          temperature: 0.2
       embedding:
         options:
-          model: nomic-embed-text:v1.5
+          model: nomic-embed-text
     vectorstore:
       chroma:
+        initialize-schema: true
         client:
           host: http://localhost
           port: 8000
         collection-name: fund_reports
+    mcp:
+      server:
+        name: fund-reports-mcp-server
+        version: 1.0.0
+        type: ASYNC
+        protocol: STREAMABLE          # <-- the missing piece
+        instructions: "Provides tools to search and summarize fund quarterly/performance reports."
+        capabilities:
+          tool: true
+          resource: true
+        streamable-http:
+          mcp-endpoint: /mcp          # this is actually the default, but explicit is clearer
+      client:
+        enabled: false
+        streamable-http:
+          connections:
+            fund-server:
+              url: http://localhost:8080
+              endpoint: /mcp
+        toolcallback:
+          enabled: true
+
   datasource:
-    url: jdbc:h2:file:./data/fund-registry
+    url: jdbc:h2:file:./data/fund-app-events
     driver-class-name: org.h2.Driver
   jpa:
     hibernate:
       ddl-auto: update
+  webflux:
+    multipart:
+      max-in-memory-size: 10MB
+  codec:
+    max-in-memory-size: 20MB
 
 mcp:
   server:
     name: fund-performance-service
-    transport: stdio   # switch to streamable-http via the -webmvc starter for networked access
+    #transport: stdio   # switch to streamable-http via the -webmvc starter for networked access
+    version: 1.0.0
+    type: ASYNC
+    instructions: "Provides tools to search and summarize fund quarterly/performance reports that have been ingested."
+    capabilities:
+      tool: true
+      resource: true
+  client:
+    sse:
+      connections:
+        fund-server:
+          url: http://localhost:8080     # loopback — same app, same port
+    toolcallback:
+      enabled: true
+
+
+server:
+  port: 8080
+
+modulith:
+  events:
+    jdbc-schema-initialization:
+      enabled: true
+
+logging:
+  level:
+    org.springframework.ai: DEBUG

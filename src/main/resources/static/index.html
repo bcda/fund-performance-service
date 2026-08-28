@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head><title>Fund Report Chat</title></head>
+<body style="font-family: system-ui; max-width: 700px; margin: 40px auto;">
+<h2>Fund Performance Chat</h2>
+<div id="log" style="border:1px solid #ccc; padding:12px; height:400px; overflow-y:auto;"></div>
+<input id="input" style="width:80%;" placeholder="Ask about a fund's performance..." />
+<button onclick="send()">Send</button>
+
+<script>
+    function send() {
+        const input = document.getElementById('input');
+        const log = document.getElementById('log');
+        const msg = input.value;
+        log.innerHTML += `<p><b>You:</b> ${msg}</p>`;
+        input.value = '';
+
+        const evt = new EventSource(`/api/chat/stream?message=${encodeURIComponent(msg)}`);
+        let botLine = document.createElement('p');
+        botLine.innerHTML = '<b>Bot:</b> <span></span>';
+        log.appendChild(botLine);
+        const span = botLine.querySelector('span');
+
+        evt.onmessage = (e) => {
+            const token = JSON.parse(e.data);
+            span.textContent += token;
+            log.scrollTop = log.scrollHeight;
+        };
+        evt.onerror = () => evt.close();
+    }
+</script>
+</body>
+</html>

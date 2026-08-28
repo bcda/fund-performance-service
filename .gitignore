@@ -36,3 +36,6 @@ target/
 data/
 *.iml
 .idea/
+.mvn/
+mvnw
+mvnw.cmd
